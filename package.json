@@ -1,0 +1,16 @@
+{
+  "name": "31_websocket_chat_app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "Gaurav",
+  "license": "ISC",
+  "description": "Making Chat App By Way 2 WebSocket",
+  "dependencies": {
+    "express": "^4.21.2",
+    "nodemon": "^3.1.9",
+    "socket.io": "^4.8.1"
+  }
+}

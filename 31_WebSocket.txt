@@ -1,0 +1,948 @@
+Web Socket:- Real Time Messaging
+
+|               +---------+           +---------+
+|               |  Client |           |  Server |
+|               +---------+           +---------+
+|                    |                     |
+|                    |  Request            |
+|                    +--------------------->
+|                    |                     |
+|                    |   Response          |
+|                    <---------------------+
+|                    |                     |
+|                    | Connection Closed   |
+|                    +--------------------->
+|                    |                     |
+|                    |                     |
+|               +---------+           +---------+
+|               |  Client |           |  Server |
+|               +---------+           +---------+
+|                    |                     |
+|                    |  Request            |
+|                    +--------------------->
+|                    |                     |
+|                    |   Response          |
+|                    <---------------------+
+|                    |                     |
+|                    | Connection Closed   |
+|                    +--------------------->
+
+|   --> Here, The problem is both the time we closed the server once we got response. Now we don't have anything to 
+|       communicate with. 
+|   --> Now, Suppose if server want to send some information then it can't send, because client closed the 
+|       connection. By this client is able to communicate in single way.
+
+---------------------------------------------------------------------------------------------------------------
+
+--> Problem, Assume you are a server and we have 2 client. Let's say we want to make a chatting appliaction(real Time appliaction) 
+
+|                                           Server
+|       Client_1                                                           Client_2
+|->NOW,
+|   Client 1 want send a message to client 2
+|   So, Client_1 sent message to server , Server got message
+
+|                                      ++++++++++++++++++++++++
+
+--> To send message to Client_2 we have two ways : 1) POLLING                2) WebSocket 
+|           
+|      ~ WAY 1 (POLLING): 
+|           Client_2 --> Request message from Server (at regular intervals) --> Server
+|           Server --> Check for message --> No message --> Send "No message" to Client_2
+|           Client_1-->Send message to --> Server
+|           Server --> Check for message --> Message exists --> Send message to Client_2
+|           Client_2 --> Request message from Server (at regular intervals) --> Server
+|           Server --> Check for message --> No message --> Send "No message" to Client_2
+|           Client_1-->Send message to --> Server
+|           Server --> Check for message --> Message exists --> Send message to Client_2
+|           ...
+|           (Repeated for every interval)
+|
+|
+|                       
+|           
+|   SUMMARY:- Client_2 asking server after each interval whether there is message for me or not. If yes server send 
+|             message else send no message. This method overkilling as if there are many users then there will me 
+|             very much load on server
+|
+|       Polling: Sending Message to Client_2
+|
+|                         +---------+           +---------+
+|                         |  Client |           |  Server |
+|                         +---------+           +---------+
+|                              |                     |
+|                              |  Request for Msg    |
+|                              +-------------------->|
+|                              |                     |
+|                              |   Response (Msg)    |
+|                              <---------------------+
+|                              |                     |
+|                              |  No Msg Response    |
+|                              <---------------------+
+|                              |                     |
+|                              |  Wait for Next Poll |
+|                              |  (Interval)         |
+|                              +-------------------->|
+|                              |                     |
+|                              |                     |
+|                         +---------+           +---------+
+|                         |  Client |           |  Server |
+|                         +---------+           +---------+
+|                              |                     |
+|                              |  Request for Msg    |
+|                              +-------------------->|
+|                              |                     |
+|                              |   Response (Msg)    |
+|                              <---------------------+
+|                              |                     |
+|                              |  No Msg Response    |
+|                              <---------------------+
+|                              |                     |
+|                              |  Wait for Next Poll |
+|                              |  (Interval)         |
+|                              +-------------------->|
+
+
+|                                      ++++++++++++++++++++++++
+
+|      ~ WAY 2 (WebSocket): More efficient. 
+|               
+|             Client_1 --> Send message to Server --> Server sees it's for Client_2 --> Sends message to Client_2
+|             Client_2 --> Send message to Server --> Server sees it's for Client_1 --> Sends message to Client_1
+|             (Bi-directional communication)
+|             Client_1 or Client_2 --> Want to leave the room --> Can close the connection
+|       
+
+WebSocket: Real-Time Messaging Let's say we have a Client and Server
+
+BY ARROWS:-
+|       Client --> HTTP Request to make WebSocket(Permanent) connection (using upgrade header) --> Server
+|       Server <-- Accept Request --> Client
+|       Server --> Send response to Client (OK)
+|       WebSocket Connection remains open (doesn't close)
+|       Server --> Send message to Client
+|       Server --> Send message to Client
+|       Server --> Send message to Client
+|       Client --> Send message to Server (doesn't wait for server's response)
+|       Server --> Send message to Client
+|       Client --> Send message to Server (doesn't wait for server's response)
+|       Client --> Send message to Server (doesn't wait for server's response)
+|       Bi-directional communication established
+|       Connection stays open for continuous communication
+|       If Client wants to leave, they can close the connection
+|       Once closed, Server can't send any message to Client
+
+BY DIAGRAM:-
+|               +---------+           +---------+
+|               |  Client |           |  Server |
+|               +---------+           +---------+
+|                    |                     |
+|                    |  HTTP Request       |
+|                    +-------------------->|
+|                    |                     |
+|                    |   Response (OK)     |
+|                    <---------------------+
+|                    |                     |
+|                    |  WebSocket Upgrade  |
+|                    +-------------------->|
+|                    |                     |
+|                    |  Persistent         |
+|                    |  Connection         |
+|                    |                     |
+|                    |  Bi-Directional     |
+|                    |  Communication      |
+|                    |                     |
+|               +---------+           +---------+
+|               |  Client |           |  Server |
+|               +---------+           +---------+
+|                    |                     |
+|                    |  Send Message       |
+|                    +-------------------->|
+|                    |                     |
+|                    |   Send Response     |
+|                    <---------------------+
+|                    |                     |
+|                    |  Keep Connection    |
+|                    |  Open               |
+|                    |                     |
+|                    |   (Close Connection)|
+|                    +-------------------->|
+|
+|   SUMMARY:- The client sends an HTTP request to the server to upgrade the connection to WebSocket. Once accepted, 
+|             a persistent, bi-directional communication is established between the client and server. This allows 
+|             real-time messaging without the need to repeatedly open new connections.
+|
+
+------------------------------------------------------------------------------------------------------------------
+
+---> How to make WebSocket?
+|   
+|   - To make WebSocket, 
+|                       We initiallly send HTTP Request we tell in it's Headers that we want to Upgrade it to 
+|                       WebSocket Server handle this Request and establish WebSocket connection for us. 
+
+---> Upgrade, The HTTP Upgrade request and response header can be used to upgrade an already-established 
+|             client/server connection to a different protocol (over the same transport protocol). For example,
+|             it can be used by a client to upgrade a connection from HTTP/1.1 to HTTP/2, or an HTTP(S) connection 
+|             to a WebSocket connection.
+
+---> For More About, Upgrade              -> https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Upgrade
+|                    Upgrade to WebSocket -> https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Upgrade#upgrading_to_websocket
+
+------------------------------------------------------------------------------------------------------------------
+
+REFERENCE-DOCS
+
+---> Reference: (Upgrade -> https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Upgrade)
+|
+---> To Implement this thing in Node.JS we have a Library Socket.io (https://socket.io/). Socket.io make it easier to handle these WebSockets
+|
+Now
+-->At, Socket.io (https://socket.io/) --> Get Started(https://socket.io/docs/v4/tutorial/introduction)
+|
+|       We can integrate Socket.io with express or we can also make it stand-alone
+|
+-->At, Get Started(https://socket.io/docs/v4/tutorial/introduction) --> Examples(At, Docs Dropdown) [https://socket.io/get-started/]
+|                                                                           
+-->At, Examples(At, Docs Dropdown) [https://socket.io/get-started/] -->Go at, chat-appliaction(https://socket.io/get-started/chat)
+|
+-->At, chat-appliaction(https://socket.io/get-started/chat) TAKE Reference                                                                           
+
+------------------------------------------------------------------------------------------------------------------
+
+CODE:
+
+--> Created index.js
+
+|-->At, chat-appliaction(https://socket.io/get-started/chat)                                                                     
+|               Code for Reference :-
+|                       const express = require('express');
+|                       const app = express();
+|                       const http = require('http');
+|                       const server = http.createServer(app);
+|                       
+|                       app.get('/', (req, res) => {
+|                         res.send('<h1>Hello world</h1>');
+|                       });
+|                       
+|                       server.listen(3000, () => {
+|                         console.log('listening on *:3000');
+|                       });
+|
+|   **Here, we had used http module because we have to attach Socket.io with express.
+|     So, we can't do directly 'app.listen' we have to do 'http.createServer(app)'
+
+---> Updated index.js,
+|                   const http = require("http")
+|                   const express = require("express");
+|                   
+|                   const app = express();
+|                   const server = http.createServer(app)
+
+---> Then Update index.js,
+|                   const http = require("http")
+|                   const express = require("express");
+|                   
+|                   const app = express();
+|                   const server = http.createServer(app)
+|                   
+|                   const PORT = 9000;
+|                   
+|                   server.listen(PORT, ()=>console.log(`Server has started at ${PORT}`))
+
+---> Create public/1_index.html
+---> Update at index.js,
+|                   app.use(express.static("/public"));
+---> Update public/1_index.html
+|                   <!DOCTYPE html>
+|                   <html lang="en">
+|                   <head>
+|                       <meta charset="UTF-8">
+|                       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|                       <title>Chat APP</title>
+|                   </head>
+|                   <body>
+|                       <h1> Chatting </h1>
+|                   </body>
+|                   </html>
+
+---> Now, npm start to check, It will show error 'Cannot GET /' as we haven't gave route at index.js
+
+---> Updating index.js
+
+|                   const http = require("http")
+|                   const express = require("express");
+|                   
+|                   const app = express();
+|                   const server = http.createServer(app)
+|                   
+|                   const PORT = 9000;
+|                   
+|                   app.use(express.static("/public"));
+|                   
+|                   // app.get('/', (req,res)=>{
+|                   //     res.sendFile('./public/1_index.html')
+|                   // })
+|                   
+|                   app.get("/", (req, res) => {
+|                       res.sendFile(path.resolve(__dirname, "public", "1_index.html")); // Provide an absolute path
+|                   });
+|                   
+|                   server.listen(PORT, ()=>console.log(`Server has started at ${PORT}`))
+
+---> Now, npm start to check, It will show error as 'app.use(express.static("/public"));' is n't working in index.js.
+    So, using path Moduel
+
+---> Updating index.js
+
+|   const path = require('path');
+|   app.use(express.static(path.resolve('./public')));
+
+---> Now, npm start to check, it worked
+
+------------------------------------------------------------------------------------------------------------------
+
+Now npm i socket.io, now we can use socket
+
+By:- https://socket.io/get-started/chat
+
+Reference Code:-
+|                   const express = require('express');
+|                   const app = express();
+|                   const http = require('http');
+|                   const server = http.createServer(app);
+|                   const { Server } = require("socket.io");
+|                   const io = new Server(server);
+|                   
+|                   app.get('/', (req, res) => {
+|                     res.sendFile(__dirname + '/index.html');
+|                   });
+|                   
+|                   io.on('connection', (socket) => {
+|                     console.log('a user connected');
+|                   });
+|                   
+|                   server.listen(3000, () => {
+|                     console.log('listening on *:3000');
+|                   });
+
+---> Updating index.js
+
+|                   const { Server } = require("socket.io");
+|                   const io = new Server(server);
+
+'io' will handle our sockets, Means Express will handle HTTP request
+
+---> Updating index.js to handle Socket.io,
+|
+|                       // Socket.io 
+|                       
+|                       io.on('connection', (socket) => {                                              // means whenever there will a connection from front-end we will get a socket(client) called as socket in socket.io world
+|                           console.log('A new user has connected', socket.id);                        // each socket has an id
+|                       });
+
+------------------------------------------------------------------------------------------------------------------
+
+Till now we installed in backend but it is also required in front-end
+
+|   At it's script will install socket.io 
+
+---> REFERENCE Code (https://socket.io/get-started/chat):-
+|
+|                   <script src="/socket.io/socket.io.js"></script>  // this is loading particular script  '/socket.io/socket.io.js'
+|                   <script>
+|                     var socket = io();
+|                   </script>
+|
+
+---> Updating public/1_index.html , 
+
+|                       <script src="/socket.io/socket.io.js"></script>
+|                       <script></script>
+
+From where is '/socket.io/socket.io.js' this thing is coming from,
+So, When we initialized server 'Server(server)' at index.js then this(Server) const { Server } = require("socket.io");
+Automatically gives us script.
+
+To check:- npm start --> Go at, http://localhost:9000/ --> inspect --> Network --> refresh(page) --> will get 'socket.io.js' --> on click at this --> 'http://localhost:9000/socket.io/socket.io.js' , here will see long script --> this script handle socket.io from server head 
+
+---> Updating public/1_index.html
+
+|               <script src="/socket.io/socket.io.js"></script>
+|               <script>
+|                   const socket = io()   // Basically  this line made socket connection for me 
+|               </script>
+
+---> Whole Code,
+
+|                       <!DOCTYPE html>
+|                       <html lang="en">
+|                       <head>
+|                           <meta charset="UTF-8">
+|                           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|                           <title>Chat APP</title>
+|                       </head>
+|                       <body>
+|                           <h1> Chatting </h1>
+|                       
+|                           <script src="/socket.io/socket.io.js"></script>
+|                           <script>
+|                               const socket = io()          // Basically  this line made socket connection for me 
+|                           </script>
+|                       </body>
+|                       </html>
+
+---> Refresh the server,
+|           Output at Terminal 'A new user has connected',
+|                                                 Server has started at 9000
+|                                                  A new user has connected thTRu-U159fTb4SEAAAB
+
+|   --->Again Refresh (3 time) the server,      [At eah refresh the new user is connected]
+|
+|               Output at Terminal, 
+|                           Server has started at 9000
+|                           A new user has connected thTRu-U159fTb4SEAAAB
+|                           A new user has connected ec6sxHT_Bp_EVrn8AAAD
+|                           A new user has connected tIbBj3WIhCHZpvzvAAAF
+|                           A new user has connected DHCnmEsIHQWz_xKtAAAH
+
+
+---> Updating public/1_index.html , Button to create new WebSocket connection
+
+|                   <!DOCTYPE html>
+|                   <html lang="en">
+|                   <head>
+|                       <meta charset="UTF-8">
+|                       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|                       <title>Chat APP</title>
+|                   </head>
+|                   <body>
+|                       <h1> Chatting </h1>
+|                       <button onclick="createConnection()"> Create WS Conneection </button>
+|                       <script src="/socket.io/socket.io.js"></script>
+|                       <script>
+|                           function createConnection() {
+|                               const socket = io()          // Basically  this line made socket connection for me 
+|                           }
+|                       </script>
+|                   </body>
+|                   </html>
+
+---> Now, npm start
+
+
+|                   OUTPUT at Terminal, 
+|                                   Server has started at 9000
+
+Now, inspect go at Network
+
+|       On clicking at button (5 times)
+
+|                   OUTPUT at Terminal, 
+|                                   Server has started at 9000
+|                                   A new user has connected EWcRdCbqCY_vyhi9AAAB
+|                                   A new user has connected gWa9HeQ1taeHQyXlAAAD
+|                                   A new user has connected v_Va5vIZ7TogpKzOAAAF
+|                                   A new user has connected zrBG2IcOn3Cz6MUcAAAH
+|                                   A new user has connected 5hR2tTy9oAlhb8ipAAAJ
+
+
+Now at Network, Open file with logo ,(    <--   )
+|                                    (    -->   )
+
+Here we will see(At Headers):- connection -> Upgrade, Upgrade -> WebSocket 
+|
+|                       Request URL     :   ws://localhost:9000/socket.io/?EIO=4&transport=websocket&sid=PBQLMfSsgOtHMNcyAAAA
+|                       Request Method  :   GET
+|                       Status Code     :   101 Switching Protocols
+|                       connection      :   Upgrade
+|                       sec-websocket-accept    :   QaKVoNN0W0N3DuXANjatTjpBWcs=
+|                       upgrade     :   websocket
+|
+|   Here we are saying to server to upgrade to websocket,
+|           Server Gave Respone:- sec-websocket-accept    :   QaKVoNN0W0N3DuXANjatTjpBWcs
+|           that this is ur id and this id is only connected with us 
+
+---> Now Update the code again public/1_index.html, [Now, whenever window loads we will make a WebSocket Connection] 
+
+|                   <!DOCTYPE html>
+|                   <html lang="en">
+|                   <head>
+|                       <meta charset="UTF-8">
+|                       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|                       <title>Chat APP</title>
+|                   </head>
+|                   <body>
+|                       <h1> Chatting </h1>
+|                       <!-- <button onclick="createConnection()"> Create WS Conneection </button> -->
+|                       <script src="/socket.io/socket.io.js"></script>
+|                       <script>
+|                           /*
+|                           function createConnection() {
+|                               const socket = io()          // Basically  this line made socket connection for me 
+|                               }
+|                           */
+|                           const socket = io()          // Basically  this line made socket connection for me 
+|                       </script>
+|                   </body>
+|                   </html>
+
+------------------------------------------------------------------------------------------------------------------
+
+Now, we have to interchange message b/w us
+
+---> Created 2_index.html and added updated code of 1_index.html there
+---> Created index2.js and updated,  "res.sendFile('./public/index2.html')"
+
+---> Updating 2_index.html
+
+|   New Code:-
+|                       <!DOCTYPE html>
+|                       <html lang="en">
+|                       <head>
+|                           <meta charset="UTF-8">
+|                           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|                           <title>Chat APP</title>
+|                       </head>
+|                       <body>
+|                           <h1> Chatting </h1>
+|                       
+|                           <input type="text" id="message" placeholder="Enter Message">
+|                           <button id="sendBtn">Send</button>
+|                       
+|                           <script src="/socket.io/socket.io.js"></script>
+|                           <script>
+|                               const socket = io();          // Basically  this line made socket connection for me 
+|                               const sendBtn = document.getElementById('sendBtn');
+|                               const messageInput= document.getElementById('message');
+|                       
+|                               sendBtn.addEventListener('click', e=>{
+|                                   const message = messageInput.value;
+|                                   console.log(message)
+|                               })
+|                           </script>
+|                       </body>
+|                       </html>
+
+|   Old Code:-
+
+|                   <!DOCTYPE html>
+|                   <html lang="en">
+|                   <head>
+|                       <meta charset="UTF-8">
+|                       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|                       <title>Chat APP</title>
+|                   </head>
+|                   <body>
+|                       <h1> Chatting </h1>
+|                       <script src="/socket.io/socket.io.js"></script>
+|                       <script>
+|                           const socket = io()          // Basically  this line made socket connection for me 
+|                       </script>
+|                   </body>
+|                   </html>
+
+|                           ++++++++++++++++++++++++++++++++++++++
+
+Now, Checking whether we are getting message at console or not,
+|
+|      npm start
+|               Write some message --> 'Hi Gaurav This Side'
+|               Send
+|               inspect console ---> Hi Gaurav This Side
+
+------------------------------------------------------------------------------------------------------------------
+
+Now we have to send this message at server side,
+
+---> Updating 2_index.html , (socket.emit('user-message', message);)
+
+|                   sendBtn.addEventListener('click', e=>{
+|                       const message = messageInput.value;
+|                       console.log(message)
+|                       socket.emit('user-message', message);
+|                   })
+
+Now,
+
+|                    npm start, 
+|                    Enter message:- gaurav Singh Heer
+|                    Send
+|                    At, 42["user-message","gaurav Singh Heer"]
+I am testing the message
+|                    Enter message:- I am testing the message
+|                    Send
+|                    42["user-message", "I am testing the message"]
+
+---> Updating index2.js
+
+// Socket.io 
+
+|                   io.on('connection', (socket) => {                                              // means whenever there will a connection from front-end we will get a socket(client) called as socket in socket.io world
+|                       // console.log('A new user has connected', socket.id);                        // each socket has an id
+|                       socket.on('user-message', message =>{      // from user-message message will come            // user-message From front-end 2_index.html socket.emit('user-message', message);
+|                           console.log("A new User message", message)
+|                       })                   
+|                   });
+
+|                               +++++++++++++++++++++++++++++++++++++
+
+Now,
+
+|                    npm start, 
+|                    Enter message:- Hello Gaurav This is the chat
+|                    Send
+|                    Output At Terminal,
+|                                   Server has started at 9000
+|                                   A new User message Hello Gaurav This is the chat
+|
+|                    Enter message:- Hello Mr.GSH
+|                    Send
+|                    Output At Terminal,
+|                                   Server has started at 9000
+|                                   A new User message Hello Gaurav This is the chat
+|                                   A new User message Hello Mr.GSH
+
+------------------------------------------------------------------------------------------------------------------
+
+Now, Client sent message to Server. Server has duty to send this message to all
+
+---> Update index2.js, if message came from front-end then send this message to all
+
+|               // Socket.io 
+|               
+|               io.on('connection', (socket) => {                                              // means whenever there will a connection from front-end we will get a socket(client) called as socket in socket.io world
+|                   // console.log('A new user has connected', socket.id);                        // each socket has an id
+|                   socket.on('user-message', message =>{      // from user-message message will come            // user-message From front-end 2_index.html socket.emit('user-message', message);
+|                       console.log("A new User message", message)
+|                       io.emit("message-toAll", message);
+|                   })                   
+|               });
+
+|                               +++++++++++++++++++++++++++++++++++++
+
+Now,
+
+|                    npm start, 
+|                    Enter message:- My name is anthony
+|                    Send
+|                    inspect-> network -> 
+|                    Now at Network, Open file with logo ,(    <--   )
+|                                                         (    -->   )
+|                    42["user-message","My name is anthony"]	
+|                    42["message-toAll","My name is anthony"]
+
+---> Update public/2_index.html 
+
+|               socket.on('message-toAll', message => console.log(message))           // io.emit("message-toAll", message); index2.js
+
+Whole Code:-
+
+|                           <!DOCTYPE html>
+|                           <html lang="en">
+|                           <head>
+|                               <meta charset="UTF-8">
+|                               <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|                               <title>Chat APP</title>
+|                           </head>
+|                           <body>
+|                               <h1> Chatting </h1>
+|                           
+|                               <input type="text" id="message" placeholder="Enter Message">
+|                               <button id="sendBtn">Send</button>
+|                           
+|                               <script src="/socket.io/socket.io.js"></script>
+|                               <script>
+|                                   const socket = io();          // Basically  this line made socket connection for me 
+|                                   const sendBtn = document.getElementById('sendBtn');
+|                                   const messageInput= document.getElementById('message');
+|                           
+|                                   socket.on('message-toAll', message => console.log(message))           // io.emit("message-toAll", message); index2.js
+|                           
+|                                   sendBtn.addEventListener('click', e=>{
+|                                       const message = messageInput.value;
+|                                       console.log(message)
+|                                       socket.emit('user-message', message);
+|                                   })
+|                               </script>
+|                           </body>
+|                           </html>
+
+Now to Check,
+
+|                   npm start
+|
+|                   Open two Browser of MS Edge
+|
+|                   Browser 1 Console                     | Browser 2 Console
+|                   --------------------------------------|--------------------------------------
+|                   Messages                              | Messages
+|                   --------------------------------------|--------------------------------------
+|                   Got -> Hello GSH                      | Sent -> Hello GSH
+|                   Sent -> Hi My Name is Anthony         |              Hello GSH
+|                   Hi My Name is Anthony                 | Got -> Hi My Name is Anthony
+|                   Got -> How Are You Anthony            | Sent -> How Are You Anthony
+|                   Sent -> I M Good wbu GSH              |       How Are You Anthony
+|                   I M Good wbu GSH                      | Got -> I M Good wbu GSH
+|                   
+|   In Both Browser we will have Different network ID and one will send one will recieve message
+|   So, as our server Got messageit is sending to all 
+
+-----------------------------------------------------------------------------------------------------------------
+
+Creating 3_index.html , to show message at browser instead of console
+Creating index3.js (to update path of 3_index.html)
+
+Update at 3_index.html
+
+NEW CODE:-
+|                       <!DOCTYPE html>
+|                       <html lang="en">
+|                       <head>
+|                           <meta charset="UTF-8">
+|                           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|                           <title>Chat APP</title>
+|                       </head>
+|                       <body>
+|                           <h1> Chatting </h1>
+|                       
+|                           <input type="text" id="message" placeholder="Enter Message">
+|                           <button id="sendBtn">Send</button>
+|                       
+|                           <div id="messagesDisplay"></div>
+|                       
+|                           <script src="/socket.io/socket.io.js"></script>
+|                           <script>
+|                               const socket = io();          // Basically  this line made socket connection for me 
+|                               const sendBtn = document.getElementById('sendBtn');
+|                               const messageInput= document.getElementById('message');
+|                               const allMessages = document.getElementById('messagesDisplay')
+|                       
+|                               // socket.on('message-toAll', message => console.log(message))           // io.emit("message-toAll", message); index2.js
+|                               socket.on('message-toAll', message =>{              // io.emit("message-toAll", message); index2.js
+|                                   const p = document.createElement('p');
+|                                   p.innerText = message;
+|                                   allMessages.appendChild(p);
+|                       
+|                               })           
+|                       
+|                               sendBtn.addEventListener('click', e=>{
+|                                   const message = messageInput.value;
+|                                   console.log(message)
+|                                   socket.emit('user-message', message);
+|                               })
+|                           </script>
+|                       </body>
+|                       </html>
+
+OLD CODE:-
+
+|                       <!DOCTYPE html>
+|                       <html lang="en">
+|                       <head>
+|                           <meta charset="UTF-8">
+|                           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|                           <title>Chat APP</title>
+|                       </head>
+|                       <body>
+|                           <h1> Chatting </h1>
+|                       
+|                           <input type="text" id="message" placeholder="Enter Message">
+|                           <button id="sendBtn">Send</button>
+|                       
+|                           <script src="/socket.io/socket.io.js"></script>
+|                           <script>
+|                               const socket = io();          // Basically  this line made socket connection for me 
+|                               const sendBtn = document.getElementById('sendBtn');
+|                               const messageInput= document.getElementById('message');
+|                       
+|                               socket.on('message-toAll', message => console.log(message))           // io.emit("message-toAll", message); index2.js
+|                       
+|                               sendBtn.addEventListener('click', e=>{
+|                                   const message = messageInput.value;
+|                                   console.log(message)
+|                                   socket.emit('user-message', message);
+|                               })
+|                           </script>
+|                       </body>
+|                       </html>
+
+Now to Check,
+
+|                   npm start
+|
+|                   Open two Browser of MS Edge
+|
+|                   Browser 1 HomePage                    | Browser 2 HomePage
+|                   --------------------------------------|--------------------------------------
+|                   Messages     ~By Anthony              | Messages        ~By Gaurav
+|                   --------------------------------------|--------------------------------------
+|                   Got -> Hi My Name is Gaurav           | Sent -> Hi My Name is Gaurav
+|                   Sent -> Hello My Name is Anthony      | Got -> Hello My Name is Anthony
+|                   Got -> I am From Himachal             | Sent -> I am From Himachal
+|                   Sent -> And I am From Bollywood       | Got -> And I am From Bollywood
+|                                                         |
+
+FOR MORE CHECKOUT--> (https://socket.io/get-started/chat)
+
+IMP_NOTE:-  public/4_index_Full_UI.html is Full Chat App With UI with reference of (https://socket.io/get-started/chat)
+|
+|  FULL CODE (WORKING without any UI):-
+|
+|       ---> 4_index_Full_UI.html
+|                                <!DOCTYPE html>
+|                                <html lang="en">
+|                                <head>
+|                                    <meta charset="UTF-8">
+|                                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+|                                    <title>Chat APP</title>
+|                                    <style>
+|                                        body {
+|                                            margin: 0;
+|                                            padding-bottom: 3rem;
+|                                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+|                                        }
+|                                
+|                                        #form {
+|                                            background: rgba(0, 0, 0, 0.15); 
+|                                            padding: 0.25rem; 
+|                                            position: fixed; 
+|                                            bottom: 0; 
+|                                            left: 0; 
+|                                            right: 0; 
+|                                            display: flex; 
+|                                            height: 3rem; 
+|                                            box-sizing: border-box; 
+|                                            backdrop-filter: blur(10px); 
+|                                        }
+|                                        #input { 
+|                                            border: none; 
+|                                            padding: 0 1rem; 
+|                                            flex-grow: 1; 
+|                                            border-radius: 2rem; 
+|                                            margin: 0.25rem;
+|                                        }
+|                                        #input:focus {
+|                                            outline: none;
+|                                        }
+|                                        #form > button { 
+|                                            background: #333; 
+|                                            border: none; 
+|                                            padding: 0 1rem; 
+|                                            margin: 0.25rem; 
+|                                            border-radius: 3px; 
+|                                            outline: none; 
+|                                            color: #fff; 
+|                                        }
+|                                
+|                                        #messages { 
+|                                            list-style-type: none; 
+|                                            margin: 0; 
+|                                            padding: 0; 
+|                                        }
+|                                        #messages > li { 
+|                                            padding: 0.5rem 1rem;
+|                                        }
+|                                        #messages > li:nth-child(odd) { 
+|                                            background: #efefef; 
+|                                        }
+|                                    </style>
+|                                </head>
+|                                <body>
+|                                    <h1> Chatting </h1>
+|                                
+|                                    <ul id="messages"></ul>
+|                                    <form id="form" action="">
+|                                      <input id="input" autocomplete="off" />
+|                                      <button>Send</button>
+|                                      <!-- <input type="text" id="message" placeholder="Enter Message"> -->
+|                                      <!-- <button id="sendBtn">Send</button> -->
+|                                    </form>
+|                                
+|                                    <!-- <div id="messagesDisplay"></div> -->
+|                                
+|                                    <script src="/socket.io/socket.io.js"></script>
+|                                    <script>
+|                                        var socket = io();
+|                                
+|                                        var messages = document.getElementById('messages');
+|                                        var form = document.getElementById('form');
+|                                        var input = document.getElementById('input');
+|                                
+|                                        form.addEventListener('submit', function(e) {
+|                                            e.preventDefault();
+|                                            if (input.value) {
+|                                                socket.emit('chat message', input.value);
+|                                                input.value = '';
+|                                            }
+|                                        });
+|                                
+|                                        socket.on('chat message', function(msg) {
+|                                            var item = document.createElement('li');
+|                                            item.textContent = msg;
+|                                            messages.appendChild(item);
+|                                            window.scrollTo(0, document.body.scrollHeight);
+|                                        });
+|                                    </script>
+|                                    <!--
+|                                    <script src="/socket.io/socket.io.js"></script>
+|                                    <script>
+|                                        const socket = io();          // Basically  this line made socket connection for me 
+|                                        const sendBtn = document.getElementById('sendBtn');
+|                                        const messageInput= document.getElementById('message');
+|                                        const allMessages = document.getElementById('messagesDisplay')
+|                                
+|                                        // socket.on('message-toAll', message => console.log(message))           // io.emit("message-toAll", message); index2.js
+|                                        socket.on('message-toAll', message =>{              // io.emit("message-toAll", message); index2.js
+|                                            const p = document.createElement('p');
+|                                            p.innerText = message;
+|                                            allMessages.appendChild(p);
+|                                
+|                                        })           
+|                                
+|                                        sendBtn.addEventListener('click', e=>{
+|                                            const message = messageInput.value;
+|                                            console.log(message)
+|                                            socket.emit('user-message', message);
+|                                        })
+|                                    </script>
+|                                    -->
+|                                </body>
+|                                </html>
+|                                          
+|       ---> index4.js
+|                   const http = require("http")
+|                   const express = require("express");
+|                   const path = require('path');
+|                   const { Server } = require("socket.io");
+|                   
+|                   const app = express();
+|                   const server = http.createServer(app);
+|                   const io = new Server(server);
+|                   
+|                   const PORT = 9000;
+|                   
+|                   // Socket.io 
+|                   
+|                   io.on('connection', (socket) => {                                              // means whenever there will a connection from front-end we will get a socket(client) called as socket in socket.io world
+|                       // console.log('A new user has connected', socket.id);                        // each socket has an id
+|                       //socket.on('user-message', message =>{      // from user-message message will come            // user-message From front-end 2_index.html socket.emit('user-message', message);
+|                       socket.on('chat message', message =>{      // from chat message message will come            // chat message From front-end 4_index_Full_UI.html socket.emit('chat message', input.value);
+|                           console.log("A new User message", message)
+|                           // io.emit("message-toAll", message);
+|                           io.emit("chat message", message);
+|                       })                   
+|                   });
+|                   
+|                   // HTTP Handle
+|                   app.use(express.static(path.resolve('./public')));
+|                   
+|                   // app.get('/', (req,res)=>{
+|                   //     res.sendFile('./public/2_index.html')
+|                   // })
+|                   
+|                   app.get("/", (req, res) => {
+|                       res.sendFile(path.resolve(__dirname, "public", "4_index_Full_UI.html")); // Provide an absolute path
+|                   });
+|                   
+|                   server.listen(PORT, ()=>console.log(`Server has started at ${PORT}`))

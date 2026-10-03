@@ -1,13 +1,14 @@
 {
-  "name": "31_websocket_chat_app",
-  "version": "1.0.0",
+  "name": "charcha-hub",
+  "version": "1.1.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "author": "Gaurav",
   "license": "ISC",
-  "description": "Making Chat App By Way 2 WebSocket",
+  "description": "CharchaHub - a real-time chat app built with Express and Socket.io",
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

@@ -3,61 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat APP</title>
-    <!-- <style>
-        body {
-            margin: 0;
-            padding-bottom: 3rem;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-        }
-
-        #form {
-            background: rgba(0, 0, 0, 0.15); 
-            padding: 0.25rem; 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            display: flex; 
-            height: 3rem; 
-            box-sizing: border-box; 
-            backdrop-filter: blur(10px); 
-        }
-        #input { 
-            border: none; 
-            padding: 0 1rem; 
-            flex-grow: 1; 
-            border-radius: 2rem; 
-            margin: 0.25rem;
-        }
-        #input:focus {
-            outline: none;
-        }
-        #form > button { 
-            background: #333; 
-            border: none; 
-            padding: 0 1rem; 
-            margin: 0.25rem; 
-            border-radius: 3px; 
-            outline: none; 
-            color: #fff; 
-        }
-
-        #messages { 
-            list-style-type: none; 
-            margin: 0; 
-            padding: 0; 
-        }
-        #messages > li { 
-            padding: 0.5rem 1rem;
-        }
-        #messages > li:nth-child(odd) { 
-            background: #efefef; 
-        }
-        #messages > li:nth-child(even) { 
-            background: #efefef; 
-        }
-    </style> -->
+    <title>CharchaHub</title>
     <style>
         body {
             margin: 0;
@@ -68,21 +14,110 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            overflow: hidden; /* Ensures no unwanted scrollbars in body */
+            overflow: hidden;
         }
-    
+
+        nav {
+            background-color: black;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .charcha { color: white; }
+
+        .hub {
+            background-color: orange;
+            color: black;
+            padding: 0.2rem 0.5rem;
+            border-radius: 5px;
+            margin-left: 4px;
+        }
+
+        #online {
+            color: #25d366;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        #messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 1rem;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #messages > li {
+            max-width: 70%;
+            padding: 0.5rem 0.75rem;
+            margin: 0.35rem 0;
+            border-radius: 0.75rem;
+            font-size: 0.95rem;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            background-color: #ffffff;
+            align-self: flex-start;
+        }
+
+        /* Own messages align right and get the green bubble. */
+        #messages > li.mine {
+            background-color: #dcf8c6;
+            align-self: flex-end;
+        }
+
+        #messages > li .meta {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #075e54;
+            margin-bottom: 0.15rem;
+        }
+
+        #messages > li .time {
+            font-weight: 400;
+            color: #888;
+            margin-left: 0.4rem;
+        }
+
+        /* Centered system messages (join/leave). */
+        #messages > li.system {
+            align-self: center;
+            background: rgba(0, 0, 0, 0.06);
+            box-shadow: none;
+            color: #555;
+            font-size: 0.78rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+        }
+
+        #typing {
+            min-height: 1.1rem;
+            padding: 0 1rem;
+            font-size: 0.8rem;
+            font-style: italic;
+            color: #777;
+        }
+
         #form {
             background-color: #f0f0f0;
             padding: 0.5rem;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
             display: flex;
             align-items: center;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
         }
-    
+
         #input {
             flex-grow: 1;
             border: none;
@@ -93,176 +128,164 @@
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
             margin-right: 0.5rem;
         }
-    
+
         #input:focus {
             outline: none;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
         }
-    
+
         #form > button {
             background-color: #25d366;
             border: none;
             padding: 0.75rem 1.5rem;
-            border-radius: 22%;
+            border-radius: 1.5rem;
             color: #fff;
             font-size: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             transition: background-color 0.2s ease;
         }
-    
-        #form > button:hover {
-            background-color: #20ba5b;
-        }
-    
-        #messages {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 100px); /* Allow the messages to take remaining space */
-        }
-    
-        #messages > li {
-            max-width: 70%;
-            padding: 0.75rem 1rem;
-            margin: 0.5rem 0;
-            border-radius: 0.75rem;
-            font-size: 0.95rem;
-            word-wrap: break-word;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-    
-        #messages > li:nth-child(odd) {
-            background-color: #dcf8c6;
-            align-self: flex-start;
-        }
-    
-        #messages > li:nth-child(even) {
-            background-color: #ffffff;
-            align-self: flex-end;
-        }
-    
-        /* h1 {
-            text-align: center;
-            margin: 0;
-            padding: 1rem;
-            background-color: #075e54;
-            color: #fff;
-            font-size: 1.5rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        } */
-        h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: white;
-        }
-        nav {
-            background-color: black;
-            padding: 1rem;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .charcha {
-            color: white;
-        }
 
-        .hub {
-            background-color: orange;
-            color: black;
-            padding: 0.2rem 0.5rem;
-            border-radius: 5px;
-            margin-left: 4px;
-        }
+        #form > button:hover { background-color: #20ba5b; }
+
         @media (max-width: 768px) {
-            h1 {
-                font-size: 1.25rem;
-            }
-    
-            #form > button {
-                padding: 0.5rem 1rem;
-                font-size: 0.9rem;
-            }
-    
-            #messages > li {
-                font-size: 0.85rem;
-            }
+            h1 { font-size: 1.25rem; }
+            #form > button { padding: 0.5rem 1rem; font-size: 0.9rem; }
+            #messages > li { font-size: 0.85rem; max-width: 85%; }
         }
     </style>
 </head>
 <body>
     <nav>
         <h1><span class="charcha">Charcha</span><span class="hub">Hub</span></h1>
+        <span id="online">0 online</span>
     </nav>
-    <!-- <h1> CharchaHub  </h1> -->
-    <!-- <h1> Hangoutयंत्र </h1> -->
-    <!-- <h1> गपShup </h1> -->
-    <!-- <h1> Chatting </h1> -->
 
     <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" />
-      <button>Send</button>
-      <!-- <input type="text" id="message" placeholder="Enter Message"> -->
-      <!-- <button id="sendBtn">Send</button> -->
-    </form>
+    <div id="typing"></div>
 
-    <!-- <div id="messagesDisplay"></div> -->
+    <form id="form" action="">
+        <input id="input" autocomplete="off" placeholder="Type a message..." />
+        <button>Send</button>
+    </form>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io();
 
-        var messages = document.getElementById('messages');
-        var form = document.getElementById('form');
-        var input = document.getElementById('input');
+        var messages = document.getElementById("messages");
+        var form = document.getElementById("form");
+        var input = document.getElementById("input");
+        var typingEl = document.getElementById("typing");
+        var onlineEl = document.getElementById("online");
 
-        form.addEventListener('submit', function(e) {
+        // Our own socket id, learned from the server's "welcome" event.
+        var myId = null;
+
+        // Ask for a username and announce ourselves to the server.
+        var username = (prompt("Enter your name") || "").trim().slice(0, 24) || "Anonymous";
+        socket.emit("join", username);
+
+        function scrollToBottom() {
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function formatTime(ts) {
+            var d = new Date(ts);
+            return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        }
+
+        // Render a chat bubble. textContent keeps user input XSS-safe.
+        function addMessage(msg) {
+            var li = document.createElement("li");
+            if (msg.id === myId) li.classList.add("mine");
+
+            var meta = document.createElement("span");
+            meta.className = "meta";
+            meta.textContent = msg.user;
+
+            var time = document.createElement("span");
+            time.className = "time";
+            time.textContent = formatTime(msg.time);
+            meta.appendChild(time);
+
+            var body = document.createElement("span");
+            body.textContent = msg.text;
+
+            li.appendChild(meta);
+            li.appendChild(body);
+            messages.appendChild(li);
+            scrollToBottom();
+        }
+
+        function addSystem(text) {
+            var li = document.createElement("li");
+            li.className = "system";
+            li.textContent = text;
+            messages.appendChild(li);
+            scrollToBottom();
+        }
+
+        socket.on("welcome", function (data) {
+            myId = data.id;
+        });
+
+        socket.on("history", function (list) {
+            (list || []).forEach(addMessage);
+        });
+
+        socket.on("chat message", addMessage);
+
+        socket.on("system", addSystem);
+
+        socket.on("online", function (count) {
+            onlineEl.textContent = count + " online";
+        });
+
+        // --- Typing indicator ---
+        var typingUsers = {};
+        var typingTimer = null;
+
+        function renderTyping() {
+            var names = Object.keys(typingUsers);
+            if (names.length === 0) {
+                typingEl.textContent = "";
+            } else if (names.length === 1) {
+                typingEl.textContent = names[0] + " is typing...";
+            } else {
+                typingEl.textContent = names.length + " people are typing...";
+            }
+        }
+
+        socket.on("typing", function (data) {
+            if (data.isTyping) typingUsers[data.user] = true;
+            else delete typingUsers[data.user];
+            renderTyping();
+        });
+
+        var amTyping = false;
+        var stopTimer = null;
+
+        input.addEventListener("input", function () {
+            if (!amTyping) {
+                amTyping = true;
+                socket.emit("typing", true);
+            }
+            clearTimeout(stopTimer);
+            stopTimer = setTimeout(function () {
+                amTyping = false;
+                socket.emit("typing", false);
+            }, 1200);
+        });
+
+        form.addEventListener("submit", function (e) {
             e.preventDefault();
-            if (input.value) {
-                socket.emit('chat message', input.value);
-                input.value = '';
+            if (input.value.trim()) {
+                socket.emit("chat message", input.value);
+                input.value = "";
+                amTyping = false;
+                socket.emit("typing", false);
             }
         });
-
-        socket.on('chat message', function(msg) {
-            var item = document.createElement('li');
-            item.textContent = msg;
-            messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
-        });
     </script>
-    <!--
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();          // Basically  this line made socket connection for me 
-        const sendBtn = document.getElementById('sendBtn');
-        const messageInput= document.getElementById('message');
-        const allMessages = document.getElementById('messagesDisplay')
-
-        // socket.on('message-toAll', message => console.log(message))           // io.emit("message-toAll", message); index2.js
-        socket.on('message-toAll', message =>{              // io.emit("message-toAll", message); index2.js
-            const p = document.createElement('p');
-            p.innerText = message;
-            allMessages.appendChild(p);
-
-        })           
-
-        sendBtn.addEventListener('click', e=>{
-            const message = messageInput.value;
-            console.log(message)
-            socket.emit('user-message', message);
-        })
-    </script>
-    -->
 </body>
 </html>

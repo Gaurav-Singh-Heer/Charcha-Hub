@@ -1,6 +1,6 @@
-const http = require("http")
+const http = require("http");
 const express = require("express");
-const path = require('path');
+const path = require("path");
 const { Server } = require("socket.io");
 
 const app = express();
@@ -9,27 +9,74 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 9000;
 
-// Socket.io 
+// In-memory chat history (last N messages). Resets on server restart.
+const MAX_HISTORY = 50;
+const history = [];
 
-io.on('connection', (socket) => {                                              // means whenever there will a connection from front-end we will get a socket(client) called as socket in socket.io world
-    // console.log('A new user has connected', socket.id);                        // each socket has an id
-    //socket.on('user-message', message =>{      // from user-message message will come            // user-message From front-end 2_index.html socket.emit('user-message', message);
-    socket.on('chat message', message =>{      // from chat message message will come            // chat message From front-end 4_index_Full_UI.html socket.emit('chat message', input.value);
-        console.log("A new User message", message)
-        // io.emit("message-toAll", message);
+// Map of socket.id -> username, used for presence + join/leave messages.
+const users = new Map();
+
+function onlineCount() {
+    return users.size;
+}
+
+// Socket.io
+io.on("connection", (socket) => {
+    // The client sends its chosen username right after connecting.
+    socket.on("join", (rawName) => {
+        const username = String(rawName || "Anonymous").trim().slice(0, 24) || "Anonymous";
+        users.set(socket.id, username);
+
+        // Send chat history to the newly joined user only.
+        socket.emit("history", history);
+
+        // Confirm identity so the client knows its own id (for bubble alignment).
+        socket.emit("welcome", { id: socket.id, username });
+
+        // Tell everyone someone joined + update the online count.
+        io.emit("system", `${username} joined the chat`);
+        io.emit("online", onlineCount());
+    });
+
+    socket.on("chat message", (text) => {
+        const username = users.get(socket.id);
+        // Ignore messages from sockets that never joined, or empty text.
+        if (!username || !text || !String(text).trim()) return;
+
+        const message = {
+            id: socket.id,
+            user: username,
+            text: String(text).slice(0, 2000),
+            time: Date.now(),
+        };
+
+        history.push(message);
+        if (history.length > MAX_HISTORY) history.shift();
+
         io.emit("chat message", message);
-    })                   
+    });
+
+    // Relay typing state to everyone except the sender.
+    socket.on("typing", (isTyping) => {
+        const username = users.get(socket.id);
+        if (!username) return;
+        socket.broadcast.emit("typing", { user: username, isTyping: !!isTyping });
+    });
+
+    socket.on("disconnect", () => {
+        const username = users.get(socket.id);
+        if (!username) return;
+        users.delete(socket.id);
+        io.emit("system", `${username} left the chat`);
+        io.emit("online", onlineCount());
+    });
 });
 
 // HTTP Handle
-app.use(express.static(path.resolve('./public')));
-
-// app.get('/', (req,res)=>{
-//     res.sendFile('./public/2_index.html')
-// })
+app.use(express.static(path.resolve("./public")));
 
 app.get("/", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "public", "1_index.html")); // Provide an absolute path
+    res.sendFile(path.resolve(__dirname, "public", "1_index.html"));
 });
 
-server.listen(PORT, ()=>console.log(`Server has started at ${PORT}`))
+server.listen(PORT, () => console.log(`Server has started at ${PORT}`));
